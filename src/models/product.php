@@ -1,7 +1,14 @@
 <?php
 
+/**
+ * Class that will do the connection with the database
+ */
 class Product
 {
+    /**
+     * Method that will get the data from the database
+     * @return array associative  that will contain data about products
+     */
     public function getData():array
     {
 
