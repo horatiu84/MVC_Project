@@ -22,6 +22,8 @@ class Router
 
     public function add(string $path, array $params=[]):void
     {
+        // routes array will have two elements : first one is the path and second one is another array
+        // that contains all the params ( controllers / actions)
         $this->routes[] = [
             "path" => $path,
             "params" => $params
@@ -35,7 +37,10 @@ class Router
      */
     public function match(string $path):array|bool
     {
+        // we'll start with removing the "/" character from the path
         $path = trim($path, "/");
+
+        // next will loop in each existing route to see if it will match the path
         foreach ($this->routes as $route) {
             /*  # is a delimiter, inside we can put our reg expression
            ^ - special character that will match the start of the string
@@ -62,10 +67,13 @@ class Router
            $pattern= $this->getPatternFromRoutePath($route["path"]);
 
             if( preg_match($pattern,$path,$matches)) {
+                //if the route matches, we want to take only the params in the returning array
+                // so will filter the array for only keys that are a string
                 $matches = array_filter($matches,"is_string",ARRAY_FILTER_USE_KEY);
 
+                //in case the route have manual inserted values, we want to merge those in the
+                // returning params array
                 $params = array_merge($matches,$route["params"]);
-                print_r($params);
                 return $params;
             }
         }
@@ -84,11 +92,21 @@ class Router
         $route_path = trim($route_path,'/');
         $segments = explode("/",$route_path);
         $segments = array_map(function (string $segment):string {
+            // we'll check to see if the segment contains a variable between curly bracers
             if(preg_match("#^\{([a-zA-Z][a-zA-Z0-9_]*)\}$#",$segment,$matches)){
-                $segment = "(?<".$matches[1].">[^/]*)";
+                // the second element of each array contains the variable name
+                //extracted from the curly bracers , from the  route
+                return "(?<".$matches[1].">[^/]*)";
             }
+
+            if(preg_match("#^\{([a-zA-Z][a-zA-Z0-9_]*):(.+)\}$#",$segment,$matches)){
+                return "(?<".$matches[1].">".$matches[2].")";
+            }
+
             return $segment;
         },$segments);
-          return "#^". implode("/",$segments) ."$#";
+       // i - adding "i" will igonore the case of letters, so our expression will
+        // validate no matter if the letters are upper or lower case
+          return "#^". implode("/",$segments) ."$#i";;
     }
 }
